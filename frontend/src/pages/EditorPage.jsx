@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import {
   Undo2, Redo2, RotateCcw, Download, Upload as UploadIcon, BookmarkPlus,
-  Sparkles, Film, ArrowLeft, Trash2,
+  Sparkles, Film, ArrowLeft, Trash2, Layers, Plus, FileArchive,
 } from "lucide-react";
 import { API, api, fileUrl } from "../lib/api";
 import { NEUTRAL_PARAMS, paramsFromAnalysis, HSL_BANDS } from "../lib/grade";
@@ -32,9 +32,12 @@ export default function EditorPage() {
   const [busy, setBusy] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
   const [presets, setPresets] = useState(loadPresets());
+  const [batchFiles, setBatchFiles] = useState([]);
+  const [batchBusy, setBatchBusy] = useState(false);
 
   const history = useRef({ past: [], future: [], last: null });
   const inputRef = useRef(null);
+  const batchInputRef = useRef(null);
 
   // Load starting analysis (if /edit/from/:id)
   useEffect(() => {
@@ -211,6 +214,49 @@ export default function EditorPage() {
       toast.error(e?.response?.data?.detail || "Video export failed");
     } finally {
       setVideoBusy(false);
+    }
+  };
+
+  // Batch export
+  const addBatchFiles = (fileList) => {
+    if (!fileList) return;
+    const incoming = Array.from(fileList)
+      .filter((f) => f.type.startsWith("image/"))
+      .map((f) => ({ file: f, id: `b_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }));
+    setBatchFiles((cur) => {
+      const merged = [...cur, ...incoming];
+      if (merged.length > 30) {
+        toast.warning("Batch capped at 30 photos");
+      }
+      return merged.slice(0, 30);
+    });
+  };
+  const removeBatchFile = (id) => setBatchFiles((cur) => cur.filter((b) => b.id !== id));
+  const clearBatch = () => setBatchFiles([]);
+  const exportBatch = async () => {
+    if (batchFiles.length === 0) {
+      toast.error("Add at least one photo to the batch");
+      return;
+    }
+    setBatchBusy(true);
+    toast.info(`Grading ${batchFiles.length} photos…`);
+    try {
+      const fd = new FormData();
+      batchFiles.forEach((b) => fd.append("files", b.file, b.file.name));
+      fd.append("params", JSON.stringify(params));
+      fd.append("max_side", "2400");
+      const resp = await axios.post(`${API}/edit/batch`, fd, {
+        responseType: "blob",
+        timeout: 300000,
+      });
+      const blob = new Blob([resp.data], { type: "application/zip" });
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      triggerDownload(blob, `chromalens_batch_${stamp}.zip`);
+      toast.success(`Zip with ${batchFiles.length} graded photos ready`);
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Batch export failed");
+    } finally {
+      setBatchBusy(false);
     }
   };
 
@@ -487,6 +533,89 @@ export default function EditorPage() {
                 Save
               </Button>
             </div>
+          </div>
+
+          {/* Batch export */}
+          <div className="cl-card p-4" data-testid="batch-panel">
+            <div className="flex items-center justify-between mb-3">
+              <div className="cl-label flex items-center gap-1.5">
+                <Layers size={12} /> Batch Export
+                {batchFiles.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px]">
+                    {batchFiles.length}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => batchInputRef.current?.click()}
+                className="text-xs text-amber-400 hover:text-amber-300 transition-colors font-medium inline-flex items-center gap-1"
+                data-testid="batch-add-btn"
+              >
+                <Plus size={12} /> Add photos
+              </button>
+              <input
+                ref={batchInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => { addBatchFiles(e.target.files); e.target.value = ""; }}
+                data-testid="batch-file-input"
+              />
+            </div>
+
+            {batchFiles.length === 0 ? (
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Add up to 30 photos and apply the current grade to all of them in
+                one zip download.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 mb-3">
+                  {batchFiles.map((b) => (
+                    <div
+                      key={b.id}
+                      className="flex items-center justify-between gap-2 py-1 px-2 rounded bg-white/5 group"
+                      data-testid={`batch-item-${b.id}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-100 truncate">{b.file.name}</div>
+                        <div className="text-[10px] font-mono-tech text-slate-500">
+                          {(b.file.size / (1024 * 1024)).toFixed(1)} MB
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeBatchFile(b.id)}
+                        className="text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Remove"
+                        data-testid={`batch-remove-${b.id}`}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={exportBatch}
+                    disabled={batchBusy}
+                    className="cl-btn-primary flex-1 h-9"
+                    data-testid="batch-export-btn"
+                  >
+                    <FileArchive size={13} className="mr-1.5" />
+                    {batchBusy ? "Zipping…" : `Export .zip (${batchFiles.length})`}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={clearBatch}
+                    className="h-9 border-white/10 text-xs"
+                    data-testid="batch-clear-btn"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Preset library */}

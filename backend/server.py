@@ -1,14 +1,17 @@
 """ChromaLens AI - FastAPI backend."""
+import io
 import os
+import re
 import uuid
 import json
 import shutil
 import subprocess
 import tempfile
+import zipfile
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import FastAPI, APIRouter, UploadFile, File, Form, HTTPException, Query, Response
 from starlette.middleware.cors import CORSMiddleware
@@ -301,8 +304,64 @@ async def edit_photo(
     )
 
 
-# ---- Editor: video export (ffmpeg + .cube LUT) ------------------------------
-@api_router.post("/edit/video")
+# ---- Editor: batch photo export --------------------------------------------
+_BATCH_ALLOWED = {"image/jpeg", "image/png", "image/webp"}
+
+
+@api_router.post("/edit/batch")
+async def edit_batch(
+    files: List[UploadFile] = File(...),
+    params: str = Form(...),
+    max_side: int = Form(2400),
+):
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    if len(files) > 30:
+        raise HTTPException(status_code=413, detail="Max 30 files per batch")
+    try:
+        params_dict = json.loads(params)
+    except Exception:
+        raise HTTPException(status_code=400, detail="params must be valid JSON")
+
+    analysis = _params_to_analysis(params_dict)
+    total = 0
+    zip_buf = io.BytesIO()
+    manifest = ["ChromaLens Batch Export", f"Files: {len(files)}", ""]
+
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_STORED) as zf:
+        for i, up in enumerate(files, start=1):
+            ct = (up.content_type or "").lower()
+            ext = (up.filename or "").lower().rsplit(".", 1)[-1]
+            if ct not in _BATCH_ALLOWED and ext not in {"jpg", "jpeg", "png", "webp"}:
+                continue
+            data = await up.read()
+            if not data or len(data) > 15 * 1024 * 1024:
+                continue
+            try:
+                out = render_graded_image(data, analysis, max_side=max_side, jpeg_quality=90)
+            except Exception as e:
+                logger.warning("Batch item %s failed: %s", up.filename, e)
+                continue
+            stem = re.sub(r"[^A-Za-z0-9._-]+", "_", (up.filename or f"photo_{i}").rsplit(".", 1)[0]) or f"photo_{i}"
+            entry = f"{i:02d}_{stem}_chromalens.jpg"
+            zf.writestr(entry, out)
+            manifest.append(entry)
+            total += 1
+        zf.writestr("manifest.txt", "\n".join(manifest))
+
+    if total == 0:
+        raise HTTPException(status_code=400, detail="No files could be processed")
+
+    zip_bytes = zip_buf.getvalue()
+    fname = f"chromalens_batch_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
+# ---- Editor: video export (ffmpeg + .cube LUT) ------------------------------@api_router.post("/edit/video")
 async def edit_video(
     file: UploadFile = File(...),
     params: str = Form(...),
