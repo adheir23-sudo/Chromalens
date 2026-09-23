@@ -5,12 +5,14 @@ import MediaPreview from "../components/MediaPreview";
 import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import TechnicalPanel from "../components/TechnicalPanel";
 import ColorGradingPanel from "../components/ColorGradingPanel";
+import { useI18n } from "../lib/i18n";
 import { ArrowLeft } from "lucide-react";
 
 export default function AnalysisDetailPage() {
   const { id } = useParams();
   const [record, setRecord] = useState(null);
   const [err, setErr] = useState(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     let cancel = false;
@@ -43,7 +45,7 @@ export default function AnalysisDetailPage() {
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-amber-300 mb-6 transition-colors"
         data-testid="back-to-gallery"
       >
-        <ArrowLeft size={14} /> Back to gallery
+        <ArrowLeft size={14} /> {t("detail.back").replace(/^←\s*/, "")}
       </Link>
 
       {!record ? (

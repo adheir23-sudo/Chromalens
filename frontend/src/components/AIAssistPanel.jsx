@@ -6,23 +6,25 @@ import {
 } from "lucide-react";
 import { API } from "../lib/api";
 import { paramsFromAnalysis } from "../lib/grade";
+import { useI18n } from "../lib/i18n";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 const MOODS_UI = [
-  { id: "cinematic-teal-orange", label: "Cinematic", tint: "from-cyan-500 to-orange-500", emoji: "🎬" },
-  { id: "warm-film-kodak", label: "Warm Film", tint: "from-amber-500 to-rose-400", emoji: "📽" },
-  { id: "cool-cyberpunk", label: "Cyberpunk", tint: "from-fuchsia-500 to-cyan-400", emoji: "🌃" },
-  { id: "golden-hour", label: "Golden Hour", tint: "from-yellow-500 to-orange-500", emoji: "🌇" },
-  { id: "moody-overcast", label: "Moody", tint: "from-slate-500 to-blue-500", emoji: "☁" },
-  { id: "bright-airy", label: "Bright & Airy", tint: "from-sky-300 to-pink-200", emoji: "✨" },
-  { id: "vintage-faded", label: "Vintage", tint: "from-amber-700 to-yellow-600", emoji: "📻" },
-  { id: "dark-dramatic", label: "Dramatic", tint: "from-red-800 to-slate-900", emoji: "🌋" },
-  { id: "portrait-glow", label: "Portrait Glow", tint: "from-orange-300 to-rose-400", emoji: "👤" },
-  { id: "vibrant-travel", label: "Travel", tint: "from-teal-400 to-yellow-400", emoji: "🌍" },
+  { id: "cinematic-teal-orange", tint: "from-cyan-500 to-orange-500", emoji: "🎬" },
+  { id: "warm-film-kodak", tint: "from-amber-500 to-rose-400", emoji: "📽" },
+  { id: "cool-cyberpunk", tint: "from-fuchsia-500 to-cyan-400", emoji: "🌃" },
+  { id: "golden-hour", tint: "from-yellow-500 to-orange-500", emoji: "🌇" },
+  { id: "moody-overcast", tint: "from-slate-500 to-blue-500", emoji: "☁" },
+  { id: "bright-airy", tint: "from-sky-300 to-pink-200", emoji: "✨" },
+  { id: "vintage-faded", tint: "from-amber-700 to-yellow-600", emoji: "📻" },
+  { id: "dark-dramatic", tint: "from-red-800 to-slate-900", emoji: "🌋" },
+  { id: "portrait-glow", tint: "from-orange-300 to-rose-400", emoji: "👤" },
+  { id: "vibrant-travel", tint: "from-teal-400 to-yellow-400", emoji: "🌍" },
 ];
 
 export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "" }) {
+  const { t } = useI18n();
   const [tab, setTab] = useState("enhance");
   const [busy, setBusy] = useState(null);
   const [refFile, setRefFile] = useState(null);
@@ -44,7 +46,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
       if (!grade) throw new Error("Empty response");
       const params = paramsFromAnalysis(grade);
       onApply(params, grade);
-      toast.success(grade.title ? `Applied: ${grade.title}` : "AI grade applied");
+      toast.success(grade.title ? `${t("editor.toasts.grade_applied")} — ${grade.title}` : t("editor.toasts.grade_applied"));
     } catch (e) {
       toast.error(e?.response?.data?.detail || e?.message || "AI assist failed");
     } finally {
@@ -54,7 +56,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
 
   const runEnhance = () => {
     if (!currentImageFile) {
-      toast.error("Load a photo into the editor first");
+      toast.error(t("editor.toasts.need_photo"));
       return;
     }
     const fd = new FormData();
@@ -65,7 +67,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
 
   const runMatch = () => {
     if (!refFile) {
-      toast.error("Upload a reference photo first");
+      toast.error(t("editor.toasts.need_ref"));
       return;
     }
     const fd = new FormData();
@@ -86,7 +88,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
   const onRefFile = (f) => {
     if (!f) return;
     if (!f.type?.startsWith("image/")) {
-      toast.error("Please choose an image file");
+      toast.error(t("editor.toasts.need_ref"));
       return;
     }
     setRefFile(f);
@@ -99,9 +101,9 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
       {/* Sub-tabs */}
       <div className="flex gap-1 mb-4 p-1 rounded-lg bg-black/40 border border-white/10">
         {[
-          ["enhance", "Auto-Enhance", Sparkles],
-          ["match", "Match Style", ImagePlus],
-          ["mood", "Mood", Wand2],
+          ["enhance", t("editor.ai.sub_enhance"), Sparkles],
+          ["match", t("editor.ai.sub_match"), ImagePlus],
+          ["mood", t("editor.ai.sub_mood"), Wand2],
         ].map(([id, label, Icon]) => (
           <button
             key={id}
@@ -124,11 +126,9 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
           <div className="mx-auto w-14 h-14 rounded-full bg-gradient-to-br from-amber-500/30 to-cyan-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
             <Sparkles size={24} className="text-amber-300" />
           </div>
-          <h3 className="font-display text-lg text-slate-100 mb-1.5">One-tap Auto-Enhance</h3>
+          <h3 className="font-display text-lg text-slate-100 mb-1.5">{t("editor.ai.enhance_title")}</h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto mb-5 leading-relaxed">
-            Gemini 3.1 Pro reviews the current photo and dials in a professional,
-            cinematic grade — balanced WB, tone, HSL, split-toning and a subtle
-            vignette. All values become editable after.
+            {t("editor.ai.enhance_desc")}
           </p>
           <Button
             onClick={runEnhance}
@@ -137,14 +137,14 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
             data-testid="ai-enhance-btn"
           >
             {busy === "enhance" ? (
-              <><Loader2 size={14} className="mr-2 animate-spin" /> Analyzing…</>
+              <><Loader2 size={14} className="mr-2 animate-spin" /> {t("editor.ai.enhance_analyzing")}</>
             ) : (
-              <><Sparkles size={14} className="mr-2" /> Auto-Enhance This Photo</>
+              <><Sparkles size={14} className="mr-2" /> {t("editor.ai.enhance_btn")}</>
             )}
           </Button>
           {!currentImageFile && (
             <p className="mt-3 text-[10px] font-mono-tech text-slate-500 uppercase tracking-widest">
-              Load a photo into the editor first
+              {t("editor.ai.enhance_need_photo")}
             </p>
           )}
         </div>
@@ -153,7 +153,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
       {tab === "match" && (
         <div data-testid="ai-match-tab">
           <p className="text-xs text-slate-400 mb-3 leading-relaxed">
-            Upload any inspiration photo — a movie still, a fashion editorial, a friend&apos;s shot — and the AI extracts its color grade so you can apply the same look to yours.
+            {t("editor.ai.match_desc")}
           </p>
           <input
             ref={refInputRef}
@@ -170,7 +170,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
                 onClick={pickRef}
                 className="absolute top-2 right-2 px-2 py-1 rounded bg-black/70 text-xs text-amber-300 hover:text-amber-200"
               >
-                Change
+                {t("editor.ai.match_change")}
               </button>
             </div>
           ) : (
@@ -180,7 +180,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
               data-testid="ai-match-pick"
             >
               <Upload size={20} className="text-amber-400" />
-              <span className="text-sm text-slate-200">Upload reference photo</span>
+              <span className="text-sm text-slate-200">{t("editor.ai.match_pick")}</span>
               <span className="text-[10px] font-mono-tech uppercase tracking-widest text-slate-500">JPG · PNG · WEBP</span>
             </button>
           )}
@@ -191,9 +191,9 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
             data-testid="ai-match-btn"
           >
             {busy === "match" ? (
-              <><Loader2 size={14} className="mr-2 animate-spin" /> Extracting grade…</>
+              <><Loader2 size={14} className="mr-2 animate-spin" /> {t("editor.ai.match_extracting")}</>
             ) : (
-              <><ImagePlus size={14} className="mr-2" /> Extract &amp; Apply Look</>
+              <><ImagePlus size={14} className="mr-2" /> {t("editor.ai.match_btn")}</>
             )}
           </Button>
         </div>
@@ -202,13 +202,13 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
       {tab === "mood" && (
         <div data-testid="ai-mood-tab">
           <p className="text-xs text-slate-400 mb-3 leading-relaxed">
-            Pick a mood — the AI generates a full grade recipe tailored to it in seconds.
+            {t("editor.ai.mood_desc")}
           </p>
           <div className="mb-3">
             <Input
               value={scene}
               onChange={(e) => setScene(e.target.value)}
-              placeholder="Optional: describe the scene (e.g. 'portrait at sunset')"
+              placeholder={t("editor.ai.mood_scene_placeholder")}
               className="bg-black/40 border-white/10 text-slate-100 h-9 text-sm"
               data-testid="ai-mood-scene"
             />
@@ -232,7 +232,7 @@ export default function AIAssistPanel({ currentImageFile, onApply, sceneHint = "
                   <div className="absolute inset-0 p-2.5 flex items-center gap-2 bg-black/30">
                     <span className="text-lg">{m.emoji}</span>
                     <span className="font-display text-xs text-white font-semibold tracking-tight">
-                      {m.label}
+                      {t(`editor.ai.moods.${m.id}`)}
                     </span>
                     {isBusy && (
                       <Loader2 size={12} className="ml-auto text-white animate-spin" />

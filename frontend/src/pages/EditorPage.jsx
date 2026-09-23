@@ -10,6 +10,7 @@ import {
 import { API, api, fileUrl } from "../lib/api";
 import { NEUTRAL_PARAMS, paramsFromAnalysis, HSL_BANDS } from "../lib/grade";
 import { loadPresets, savePreset, deletePreset } from "../lib/presets";
+import { useI18n } from "../lib/i18n";
 import EditorCanvas from "../components/EditorCanvas";
 import { ParamSlider, TempSlider } from "../components/EditorSliders";
 import HuePicker from "../components/HuePicker";
@@ -19,20 +20,12 @@ import { Input } from "../components/ui/input";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
-// Tool bar spec — CapCut-style bottom nav
-const TOOLS = [
-  { id: "ai",       label: "AI Assist", icon: Sparkles,   accent: "amber" },
-  { id: "basic",    label: "Adjust",    icon: Sliders,    accent: "slate" },
-  { id: "tone",     label: "Tone",      icon: ContrastIcon, accent: "slate" },
-  { id: "hsl",      label: "HSL",       icon: Palette,    accent: "slate" },
-  { id: "split",    label: "Split",     icon: PaintBucket,accent: "slate" },
-  { id: "fx",       label: "FX",        icon: Droplet,    accent: "slate" },
-  { id: "presets",  label: "Presets",   icon: BookmarkPlus, accent: "slate" },
-  { id: "batch",    label: "Batch",     icon: Layers,     accent: "slate" },
-];
+const TOOL_KEYS = ["ai", "adjust", "tone", "hsl", "split", "fx", "presets", "batch"];
+const TOOL_ICONS = { ai: Sparkles, adjust: Sliders, tone: ContrastIcon, hsl: Palette, split: PaintBucket, fx: Droplet, presets: BookmarkPlus, batch: Layers };
 
 export default function EditorPage() {
   const { id } = useParams();
+  const { t } = useI18n();
 
   const [srcImage, setSrcImage] = useState(null);
   const [srcFile, setSrcFile] = useState(null);
@@ -88,7 +81,6 @@ export default function EditorPage() {
     })();
     return () => { cancel = true; };
   }, [id]);
-
   useEffect(() => {
     const last = history.current.last;
     if (last && JSON.stringify(last) === JSON.stringify(params)) return;
@@ -140,7 +132,7 @@ export default function EditorPage() {
       setSrcName(f.name || "clip.mp4");
       setSrcKind("video");
       setSrcImage(null);
-      toast.info("Video loaded — sliders shown, export applies via .cube LUT");
+      toast.info(t("editor.video_note"));
     } else if (type.startsWith("image/")) {
       const url = URL.createObjectURL(f);
       const img = new Image();
@@ -170,18 +162,18 @@ export default function EditorPage() {
 
   const applyPreset = (preset) => {
     setParams(clone(preset.params));
-    toast.success(`Applied preset "${preset.name}"`);
+    toast.success(t("editor.toasts.preset_applied", { name: preset.name }));
   };
   const saveAsPreset = () => {
     const name = presetName.trim() || `Preset ${new Date().toLocaleString()}`;
     savePreset(name, params);
     setPresets(loadPresets());
     setPresetName("");
-    toast.success(`Saved preset "${name}"`);
+    toast.success(t("editor.toasts.preset_saved", { name }));
   };
   const removePreset = (pid) => {
     setPresets(deletePreset(pid));
-    toast.success("Preset deleted");
+    toast.success(t("editor.toasts.preset_deleted"));
   };
 
   const applyAIGrade = (aiParamsIn) => {
@@ -210,7 +202,7 @@ export default function EditorPage() {
       fd.append("max_side", "2400");
       const resp = await axios.post(`${API}/edit/photo`, fd, { responseType: "blob", timeout: 90000 });
       triggerDownload(new Blob([resp.data], { type: "image/jpeg" }), srcName.replace(/\.[^.]+$/, "") + "_chromalens.jpg");
-      toast.success("Full resolution export ready");
+      toast.success(t("editor.toasts.photo_ready"));
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Export failed");
     } finally { setBusy(false); }
@@ -218,14 +210,14 @@ export default function EditorPage() {
   const exportVideo = async () => {
     if (!srcFile) return;
     setVideoBusy(true);
-    toast.info("Grading your video — this may take up to 2 minutes");
+    toast.info(t("editor.toasts.video_started"));
     try {
       const fd = new FormData();
       fd.append("file", srcFile, srcName);
       fd.append("params", JSON.stringify(params));
       const resp = await axios.post(`${API}/edit/video`, fd, { responseType: "blob", timeout: 300000 });
       triggerDownload(new Blob([resp.data], { type: "video/mp4" }), srcName.replace(/\.[^.]+$/, "") + "_chromalens.mp4");
-      toast.success("Graded video ready");
+      toast.success(t("editor.toasts.video_ready"));
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Video export failed");
     } finally { setVideoBusy(false); }
@@ -239,16 +231,16 @@ export default function EditorPage() {
       .map((f) => ({ file: f, id: `b_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }));
     setBatchFiles((cur) => {
       const merged = [...cur, ...incoming];
-      if (merged.length > 30) toast.warning("Batch capped at 30 photos");
+      if (merged.length > 30) toast.warning(t("editor.toasts.batch_capped"));
       return merged.slice(0, 30);
     });
   };
   const removeBatchFile = (bid) => setBatchFiles((cur) => cur.filter((b) => b.id !== bid));
   const clearBatch = () => setBatchFiles([]);
   const exportBatch = async () => {
-    if (batchFiles.length === 0) { toast.error("Add at least one photo"); return; }
+    if (batchFiles.length === 0) { toast.error(t("editor.toasts.batch_min")); return; }
     setBatchBusy(true);
-    toast.info(`Grading ${batchFiles.length} photos…`);
+    toast.info(`${t("editor.tools.batch")} · ${batchFiles.length}`);
     try {
       const fd = new FormData();
       batchFiles.forEach((b) => fd.append("files", b.file, b.file.name));
@@ -257,7 +249,7 @@ export default function EditorPage() {
       const resp = await axios.post(`${API}/edit/batch`, fd, { responseType: "blob", timeout: 300000 });
       const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
       triggerDownload(new Blob([resp.data], { type: "application/zip" }), `chromalens_batch_${stamp}.zip`);
-      toast.success(`Zip with ${batchFiles.length} graded photos ready`);
+      toast.success(t("editor.toasts.zip_ready", { n: batchFiles.length }));
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Batch export failed");
     } finally { setBatchBusy(false); }
@@ -277,13 +269,13 @@ export default function EditorPage() {
                 className="text-sm text-slate-400 hover:text-amber-300 flex items-center gap-1 flex-shrink-0"
                 data-testid="editor-back"
               >
-                <ArrowLeft size={14} /> Back
+                <ArrowLeft size={14} /> {t("editor.back")}
               </Link>
             )}
             <div className="min-w-0">
-              <div className="cl-label">Studio · Live Color Editor</div>
+              <div className="cl-label">{t("editor.eyebrow")}</div>
               <h1 className="font-display text-lg sm:text-xl font-bold text-slate-100 truncate">
-                {srcKind === "video" ? "Grading your video" : "Editing your photo"}
+                {srcKind === "video" ? t("editor.title_video") : t("editor.title_photo")}
               </h1>
             </div>
           </div>
@@ -291,19 +283,19 @@ export default function EditorPage() {
             <Button variant="outline" onClick={undo} className="h-9 border-white/10" data-testid="undo-btn"><Undo2 size={14} /></Button>
             <Button variant="outline" onClick={redo} className="h-9 border-white/10" data-testid="redo-btn"><Redo2 size={14} /></Button>
             <Button variant="outline" onClick={resetAll} className="h-9 border-white/10 text-xs" data-testid="reset-ai-btn">
-              <RotateCcw size={14} className="mr-1.5" /> AI
+              <RotateCcw size={14} className="mr-1.5" /> {t("editor.reset_ai")}
             </Button>
             <Button variant="outline" onClick={resetToNeutral} className="h-9 border-white/10 text-xs" data-testid="reset-neutral-btn">
-              Neutral
+              {t("editor.neutral")}
             </Button>
             {srcKind === "image" && srcFile && (
               <Button onClick={exportPhoto} disabled={busy} className="cl-btn-primary h-10 px-4 rounded-lg" data-testid="export-photo-btn">
-                <Download size={14} className="mr-2" /> {busy ? "Exporting…" : "Export JPG"}
+                <Download size={14} className="mr-2" /> {busy ? t("editor.exporting") : t("editor.export_jpg")}
               </Button>
             )}
             {srcKind === "video" && srcFile && (
               <Button onClick={exportVideo} disabled={videoBusy} className="cl-btn-primary h-10 px-4 rounded-lg" data-testid="export-video-btn">
-                <Film size={14} className="mr-2" /> {videoBusy ? "Rendering…" : "Export MP4"}
+                <Film size={14} className="mr-2" /> {videoBusy ? t("editor.rendering") : t("editor.export_mp4")}
               </Button>
             )}
           </div>
@@ -319,9 +311,7 @@ export default function EditorPage() {
           <div className="w-full h-full flex items-center justify-center p-6 text-center">
             <div>
               <video src={videoBlobUrl} controls className="max-h-[60vh] max-w-full rounded shadow-2xl mx-auto" data-testid="editor-video-preview" />
-              <p className="mt-4 text-sm text-slate-400">
-                Video plays raw — slider changes are baked in via a .cube LUT on export.
-              </p>
+              <p className="mt-4 text-sm text-slate-400">{t("editor.video_note")}</p>
             </div>
           </div>
         )}
@@ -332,8 +322,8 @@ export default function EditorPage() {
             data-testid="editor-picker"
           >
             <UploadIcon size={40} className="text-amber-400 mb-4" />
-            <p className="font-display text-2xl text-slate-100">Load a photo or video to edit</p>
-            <p className="text-sm text-slate-400 mt-2">JPG · PNG · WEBP · MP4 · MOV</p>
+            <p className="font-display text-2xl text-slate-100">{t("editor.picker_title")}</p>
+            <p className="text-sm text-slate-400 mt-2">{t("editor.picker_sub")}</p>
           </button>
         )}
         <input
@@ -348,7 +338,7 @@ export default function EditorPage() {
         {srcFile && (
           <div className="absolute top-3 left-4 flex items-center gap-2 font-mono-tech text-[10px] uppercase tracking-widest text-slate-500 pointer-events-none">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            LIVE · {srcName}
+            {t("editor.live")} · {srcName}
           </div>
         )}
         {srcFile && (
@@ -357,7 +347,7 @@ export default function EditorPage() {
             className="absolute top-3 right-4 text-xs text-amber-400 hover:text-amber-300 transition-colors font-medium"
             data-testid="editor-change-file"
           >
-            Change file →
+            {t("editor.change_file")}
           </button>
         )}
       </div>
@@ -375,7 +365,7 @@ export default function EditorPage() {
             >
               <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
                 <div className="cl-label">
-                  {TOOLS.find((t) => t.id === activeTool)?.label}
+                  {t(`editor.tools.${activeTool}`)}
                 </div>
                 <button
                   onClick={() => setActiveTool(null)}
@@ -393,7 +383,7 @@ export default function EditorPage() {
                     sceneHint={sceneHint}
                   />
                 )}
-                {activeTool === "basic" && (
+                {activeTool === "adjust" && (
                   <div className="space-y-1">
                     <TempSlider value={params.temperature} onChange={(v) => set({ temperature: v })} />
                     <ParamSlider label="Tint" value={params.tint} min={-150} max={150} onChange={(v) => set({ tint: v })} testId="slider-tint" />
@@ -458,15 +448,15 @@ export default function EditorPage() {
       <div className="border-t border-white/10 bg-[#0A0C10]/95 backdrop-blur-xl z-40" data-testid="tool-tray">
         <div className="max-w-[1600px] mx-auto px-2 sm:px-4">
           <div className="flex items-stretch overflow-x-auto scrollbar-hide">
-            {TOOLS.map((t) => {
-              const Icon = t.icon;
-              const isActive = activeTool === t.id;
-              const isAi = t.id === "ai";
+            {TOOL_KEYS.map((tid) => {
+              const Icon = TOOL_ICONS[tid];
+              const isActive = activeTool === tid;
+              const isAi = tid === "ai";
               return (
                 <button
-                  key={t.id}
-                  onClick={() => setActiveTool(isActive ? null : t.id)}
-                  data-testid={`tool-${t.id}`}
+                  key={tid}
+                  onClick={() => setActiveTool(isActive ? null : tid)}
+                  data-testid={`tool-${tid}`}
                   className={`flex-1 min-w-[76px] py-3 px-2 flex flex-col items-center gap-1 transition-colors ${
                     isActive
                       ? "text-amber-300 bg-white/5"
@@ -483,7 +473,7 @@ export default function EditorPage() {
                     <Icon size={18} strokeWidth={2} className={isAi && !isActive ? "text-amber-300" : ""} />
                   </div>
                   <span className="text-[10px] font-mono-tech uppercase tracking-widest leading-none">
-                    {t.label}
+                    {t(`editor.tools.${tid}`)}
                   </span>
                 </button>
               );

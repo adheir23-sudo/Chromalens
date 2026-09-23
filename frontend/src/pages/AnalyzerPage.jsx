@@ -7,12 +7,14 @@ import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import TechnicalPanel from "../components/TechnicalPanel";
 import ColorGradingPanel from "../components/ColorGradingPanel";
 import { api } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 import { Sparkles } from "lucide-react";
 
 export default function AnalyzerPage() {
   const [record, setRecord] = useState(null);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const submit = async (file) => {
     setBusy(true);
@@ -25,7 +27,7 @@ export default function AnalyzerPage() {
         timeout: 180000,
       });
       setRecord(data);
-      toast.success("Analysis complete");
+      toast.success(t("analyzer.toast_complete"));
     } catch (e) {
       const msg =
         e?.response?.data?.detail ||
@@ -43,19 +45,17 @@ export default function AnalyzerPage() {
       <div className="mb-10 cl-rise" data-testid="hero-section">
         <div className="cl-label mb-3 flex items-center gap-2">
           <Sparkles size={12} className="text-amber-400" />
-          Powered by Gemini 3.1 Pro
+          {t("analyzer.hero_eyebrow")}
         </div>
         <h1 className="font-display font-bold text-slate-100 text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight max-w-3xl">
-          Reveal the{" "}
+          {t("analyzer.hero_title_prefix")}{" "}
           <span className="bg-gradient-to-r from-amber-400 to-cyan-400 bg-clip-text text-transparent">
-            color science
+            {t("analyzer.hero_title_highlight")}
           </span>{" "}
-          behind any shot.
+          {t("analyzer.hero_title_suffix")}
         </h1>
         <p className="mt-5 text-slate-400 text-base sm:text-lg max-w-2xl leading-relaxed">
-          Drop a photo or video clip and ChromaLens returns the camera, lens,
-          resolution, bit depth, software, and a complete Lightroom &amp; DaVinci
-          Resolve grading recipe you can copy and paste into your own edit.
+          {t("analyzer.hero_sub")}
         </p>
       </div>
 
@@ -97,17 +97,18 @@ export default function AnalyzerPage() {
 }
 
 function PromoBlock({ onSeeGallery }) {
+  const { t } = useI18n();
   const items = [
-    { k: "EXIF Telemetry", v: "Camera · Lens · ISO · Aperture · Shutter" },
-    { k: "Format Details", v: "Resolution · Megapixels · Bit Depth · FPS" },
-    { k: "Software ID", v: "Lightroom · DaVinci · Capture One · Premiere" },
-    { k: "Color Recipe", v: "Temperature, HSL Matrix, Lift/Gamma/Gain" },
+    { k: t("analyzer.promo_1_k"), v: t("analyzer.promo_1_v") },
+    { k: t("analyzer.promo_2_k"), v: t("analyzer.promo_2_v") },
+    { k: t("analyzer.promo_3_k"), v: t("analyzer.promo_3_v") },
+    { k: t("analyzer.promo_4_k"), v: t("analyzer.promo_4_v") },
   ];
   return (
     <div className="cl-card p-6" data-testid="promo-block">
-      <div className="cl-label mb-1">What you&apos;ll get</div>
+      <div className="cl-label mb-1">{t("analyzer.promo_eyebrow")}</div>
       <h3 className="font-display text-2xl font-semibold text-slate-100 mb-5">
-        The full darkroom readout
+        {t("analyzer.promo_title")}
       </h3>
       <p className="sr-only">Analyze photos and videos to reveal camera, lens, and grading formulas.</p>
       <div className="space-y-3.5">
@@ -128,25 +129,23 @@ function PromoBlock({ onSeeGallery }) {
         className="mt-6 text-sm text-amber-400 hover:text-amber-300 transition-colors font-medium"
         data-testid="see-gallery-link"
       >
-        → Browse the community gallery
+        {t("analyzer.browse_gallery")}
       </button>
     </div>
   );
 }
 
 function AnalyzingBlock() {
+  const { t } = useI18n();
   const lines = [
-    "Reading pixels …",
-    "Estimating sensor + bit depth …",
-    "Sampling dominant palette …",
-    "Solving color grade coefficients …",
-    "Writing Lightroom + DaVinci recipe …",
+    t("analyzer.a1"), t("analyzer.a2"), t("analyzer.a3"),
+    t("analyzer.a4"), t("analyzer.a5"),
   ];
   return (
     <div className="cl-card p-6" data-testid="analyzing-block">
-      <div className="cl-label mb-1">Working</div>
+      <div className="cl-label mb-1">{t("analyzer.analyzing_eyebrow")}</div>
       <h3 className="font-display text-xl font-semibold text-slate-100 mb-4">
-        Analyzing your frame
+        {t("analyzer.analyzing_title")}
       </h3>
       <ul className="space-y-2.5">
         {lines.map((l, i) => (

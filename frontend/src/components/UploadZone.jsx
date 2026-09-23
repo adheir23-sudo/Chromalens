@@ -1,8 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { Upload, FileImage, Film, X } from "lucide-react";
 import { Button } from "./ui/button";
+import { useI18n } from "../lib/i18n";
 
 export default function UploadZone({ onFileSelected, isBusy }) {
+  const { t } = useI18n();
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -37,9 +39,9 @@ export default function UploadZone({ onFileSelected, isBusy }) {
     <div className="cl-card p-6 sm:p-8 grain" data-testid="upload-card">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <div className="cl-label mb-1">01 · Input Stage</div>
+          <div className="cl-label mb-1">{t("upload.eyebrow")}</div>
           <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-100">
-            Drop a photo or clip
+            {t("upload.title")}
           </h2>
         </div>
         {preview && (
@@ -74,17 +76,17 @@ export default function UploadZone({ onFileSelected, isBusy }) {
             <Upload size={28} className="text-amber-400" strokeWidth={1.8} />
           </div>
           <p className="font-display text-lg text-slate-100 mb-2">
-            Drop your image or video here
+            {t("upload.drop_here")}
           </p>
           <p className="text-sm text-slate-400 max-w-md">
-            Or click to browse — JPG, PNG, WEBP, MP4, MOV · up to 40 MB
+            {t("upload.drop_sub")}
           </p>
           <div className="mt-6 flex gap-4 text-[10px] font-mono-tech uppercase tracking-widest text-slate-500">
             <span className="flex items-center gap-1">
-              <FileImage size={12} /> Photo
+              <FileImage size={12} /> {t("upload.photo")}
             </span>
             <span className="flex items-center gap-1">
-              <Film size={12} /> Video
+              <Film size={12} /> {t("upload.video")}
             </span>
           </div>
           <input
@@ -118,7 +120,7 @@ export default function UploadZone({ onFileSelected, isBusy }) {
 
           <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="font-mono-tech text-xs text-slate-400 truncate">
-              <span className="text-slate-500">FILE · </span>
+              <span className="text-slate-500">{t("upload.file")} · </span>
               <span className="text-slate-200">{preview.name}</span>
               <span className="text-slate-600"> · </span>
               <span className="text-cyan-300">
@@ -134,10 +136,10 @@ export default function UploadZone({ onFileSelected, isBusy }) {
               {isBusy ? (
                 <span className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#0A0C10] cl-pulse" />
-                  Analyzing…
+                  {t("upload.analyzing")}
                 </span>
               ) : (
-                "Reveal the Formula"
+                t("upload.reveal")
               )}
             </Button>
           </div>

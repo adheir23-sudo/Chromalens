@@ -1,7 +1,10 @@
 import { NavLink, Link } from "react-router-dom";
 import { Aperture } from "lucide-react";
+import { useI18n } from "../lib/i18n";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Header() {
+  const { t } = useI18n();
   const linkCls = ({ isActive }) =>
     `px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
       isActive
@@ -14,18 +17,14 @@ export default function Header() {
       data-testid="app-header"
       className="fixed top-0 inset-x-0 z-50 bg-[#0A0C10]/85 backdrop-blur-xl border-b border-white/10"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-3">
         <Link
           to="/"
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3 group flex-shrink-0"
           data-testid="header-logo"
         >
           <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500/20 to-cyan-500/10 border border-amber-500/30 flex items-center justify-center">
-            <Aperture
-              size={20}
-              className="text-amber-400 aperture-spin"
-              strokeWidth={2}
-            />
+            <Aperture size={20} className="text-amber-400 aperture-spin" strokeWidth={2} />
           </div>
           <div className="flex flex-col leading-tight">
             <span className="font-display font-bold text-slate-100 text-base tracking-tight">
@@ -37,24 +36,31 @@ export default function Header() {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           <NavLink to="/" end className={linkCls} data-testid="nav-analyzer">
-            Analyzer
+            {t("nav.analyzer")}
           </NavLink>
           <NavLink to="/edit" className={linkCls} data-testid="nav-editor">
-            Editor
+            {t("nav.editor")}
           </NavLink>
           <NavLink to="/gallery" className={linkCls} data-testid="nav-gallery">
-            Gallery
+            {t("nav.gallery")}
           </NavLink>
           <NavLink to="/about" className={linkCls} data-testid="nav-about">
-            About
+            {t("nav.about")}
           </NavLink>
         </nav>
 
-        <div className="hidden md:flex items-center gap-2 font-mono-tech text-[10px] uppercase tracking-widest text-slate-500">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Gemini 3.1 Pro · Online</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <LanguageSwitcher variant="header" />
+          <NavLink
+            to="/settings"
+            className="hidden md:flex items-center gap-2 font-mono-tech text-[10px] uppercase tracking-widest text-slate-500 hover:text-amber-300 transition-colors"
+            data-testid="nav-settings"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            {t("header.status_online")}
+          </NavLink>
         </div>
       </div>
     </header>
