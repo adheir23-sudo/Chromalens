@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import MediaPreview from "../components/MediaPreview";
+import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import TechnicalPanel from "../components/TechnicalPanel";
 import ColorGradingPanel from "../components/ColorGradingPanel";
 import { ArrowLeft } from "lucide-react";
@@ -54,6 +55,9 @@ export default function AnalysisDetailPage() {
           </div>
           <div className="lg:col-span-5">
             <TechnicalPanel technical={record.analysis?.technical} />
+          </div>
+          <div className="lg:col-span-12">
+            <BeforeAfterSlider record={record} />
           </div>
           <div className="lg:col-span-12">
             <ColorGradingPanel analysis={record.analysis} analysisId={record.id} />

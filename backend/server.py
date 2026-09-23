@@ -17,7 +17,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from storage import init_storage, put_object, get_object  # noqa: E402
 from analyzer import analyze_media  # noqa: E402
-from lut import build_cube_lut  # noqa: E402
+from lut import build_cube_lut, render_graded_preview  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -210,6 +210,40 @@ async def lut_endpoint(analysis_id: str, size: int = Query(33, ge=17, le=65)):
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Cache-Control": "public, max-age=3600",
         },
+    )
+
+
+# ---- Graded preview ---------------------------------------------------------
+_preview_cache: dict[str, bytes] = {}
+
+
+@api_router.get("/preview/{analysis_id}")
+async def preview_endpoint(analysis_id: str):
+    record = await db.analyses.find_one(
+        {"id": analysis_id, "is_deleted": False}, {"_id": 0}
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    if record.get("media_type") != "image":
+        raise HTTPException(status_code=415, detail="Preview is available for images only")
+
+    cached = _preview_cache.get(analysis_id)
+    if cached is None:
+        try:
+            src_bytes, _ = get_object(record["storage_path"])
+            cached = render_graded_preview(src_bytes, record.get("analysis") or {})
+        except Exception as e:
+            logger.exception("Preview render failed")
+            raise HTTPException(status_code=500, detail=f"Preview render failed: {e}") from e
+        # simple LRU-ish cap
+        if len(_preview_cache) > 128:
+            _preview_cache.pop(next(iter(_preview_cache)))
+        _preview_cache[analysis_id] = cached
+
+    return Response(
+        content=cached,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
     )
 
 

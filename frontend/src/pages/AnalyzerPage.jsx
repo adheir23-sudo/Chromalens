@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import UploadZone from "../components/UploadZone";
 import MediaPreview from "../components/MediaPreview";
+import BeforeAfterSlider from "../components/BeforeAfterSlider";
 import TechnicalPanel from "../components/TechnicalPanel";
 import ColorGradingPanel from "../components/ColorGradingPanel";
 import { api } from "../lib/api";
@@ -78,6 +79,12 @@ export default function AnalyzerPage() {
             </>
           )}
         </div>
+
+        {record && (
+          <div className="lg:col-span-12 cl-rise">
+            <BeforeAfterSlider record={record} />
+          </div>
+        )}
 
         {record && (
           <div className="lg:col-span-12 cl-rise">
