@@ -56,7 +56,7 @@ export default function AnalysisDetailPage() {
             <TechnicalPanel technical={record.analysis?.technical} />
           </div>
           <div className="lg:col-span-12">
-            <ColorGradingPanel analysis={record.analysis} />
+            <ColorGradingPanel analysis={record.analysis} analysisId={record.id} />
           </div>
         </div>
       )}

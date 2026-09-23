@@ -17,6 +17,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from storage import init_storage, put_object, get_object  # noqa: E402
 from analyzer import analyze_media  # noqa: E402
+from lut import build_cube_lut  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -186,6 +187,29 @@ async def file_endpoint(analysis_id: str):
         content=data,
         media_type=record.get("content_type") or ct,
         headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+# ---- LUT export -------------------------------------------------------------
+@api_router.get("/luts/{analysis_id}.cube")
+async def lut_endpoint(analysis_id: str, size: int = Query(33, ge=17, le=65)):
+    record = await db.analyses.find_one(
+        {"id": analysis_id, "is_deleted": False}, {"_id": 0}
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    try:
+        cube_text, filename = build_cube_lut(record.get("analysis") or {}, size=size)
+    except Exception as e:
+        logger.exception("LUT generation failed")
+        raise HTTPException(status_code=500, detail=f"LUT generation failed: {e}") from e
+    return Response(
+        content=cube_text,
+        media_type="application/x-cube",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "public, max-age=3600",
+        },
     )
 
 

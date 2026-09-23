@@ -1,8 +1,9 @@
 import { useMemo } from "react";
-import { Copy } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { Button } from "./ui/button";
+import { API } from "../lib/api";
 
 function SliderRow({ label, value, min, max, unit = "" }) {
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
@@ -125,7 +126,7 @@ function ColorWheel({ title, values, testId }) {
   );
 }
 
-export default function ColorGradingPanel({ analysis }) {
+export default function ColorGradingPanel({ analysis, analysisId }) {
   const lr = analysis?.lightroom || {};
   const dv = analysis?.davinci || {};
   const mood = analysis?.mood || {};
@@ -227,24 +228,38 @@ ${cc.notes || ""}
             </p>
           )}
         </div>
-        {palette.length > 0 && (
-          <div className="flex gap-1.5" data-testid="palette-swatches">
-            {palette.slice(0, 6).map((p, i) => (
-              <div
-                key={i}
-                className="w-9 h-9 rounded-md ring-1 ring-white/10 relative group cursor-pointer"
-                style={{ background: p.hex }}
-                onClick={() => copy(p.hex, p.hex)}
-                title={`${p.name} · ${p.hex}`}
-                data-testid={`palette-swatch-${i}`}
-              >
-                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 font-mono-tech text-[9px] text-slate-400 whitespace-nowrap transition-opacity">
-                  {p.hex}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-col items-end gap-3">
+          {analysisId && (
+            <a
+              href={`${API}/luts/${analysisId}.cube`}
+              download
+              onClick={() => toast.success(".cube LUT download started")}
+              data-testid="download-lut-btn"
+              className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-white/5 hover:bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 text-amber-300 hover:text-amber-200 transition-colors text-sm font-medium"
+            >
+              <Download size={14} />
+              Download .cube LUT
+            </a>
+          )}
+          {palette.length > 0 && (
+            <div className="flex gap-1.5" data-testid="palette-swatches">
+              {palette.slice(0, 6).map((p, i) => (
+                <div
+                  key={i}
+                  className="w-9 h-9 rounded-md ring-1 ring-white/10 relative group cursor-pointer"
+                  style={{ background: p.hex }}
+                  onClick={() => copy(p.hex, p.hex)}
+                  title={`${p.name} · ${p.hex}`}
+                  data-testid={`palette-swatch-${i}`}
+                >
+                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 font-mono-tech text-[9px] text-slate-400 whitespace-nowrap transition-opacity">
+                    {p.hex}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="lightroom" className="w-full">

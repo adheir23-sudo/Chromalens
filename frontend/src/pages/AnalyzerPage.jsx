@@ -81,7 +81,7 @@ export default function AnalyzerPage() {
 
         {record && (
           <div className="lg:col-span-12 cl-rise">
-            <ColorGradingPanel analysis={record.analysis} />
+            <ColorGradingPanel analysis={record.analysis} analysisId={record.id} />
           </div>
         )}
       </div>
