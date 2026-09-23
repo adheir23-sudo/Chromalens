@@ -143,6 +143,10 @@ body::before {
 }
 .cl-rise { animation: cl-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Hide scrollbar utility */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 /* Editor slider (shadcn) */
 .editor-slider [data-slot="slider-track"],
 .editor-slider [role="slider"] { outline: none; }

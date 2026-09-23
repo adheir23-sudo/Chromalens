@@ -25,6 +25,7 @@ load_dotenv(ROOT_DIR / ".env")
 from storage import init_storage, put_object, get_object  # noqa: E402
 from analyzer import analyze_media  # noqa: E402
 from lut import build_cube_lut, render_graded_preview, render_graded_image  # noqa: E402
+import ai_assist  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -361,7 +362,8 @@ async def edit_batch(
     )
 
 
-# ---- Editor: video export (ffmpeg + .cube LUT) ------------------------------@api_router.post("/edit/video")
+# ---- Editor: video export (ffmpeg + .cube LUT) ------------------------------
+@api_router.post("/edit/video")
 async def edit_video(
     file: UploadFile = File(...),
     params: str = Form(...),
@@ -422,6 +424,56 @@ async def edit_video(
         )
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+# ---- AI Assist --------------------------------------------------------------
+@api_router.get("/ai/moods")
+async def ai_moods():
+    return {"moods": ai_assist.list_moods()}
+
+
+@api_router.post("/ai/assist")
+async def ai_assist_endpoint(
+    mode: str = Form(...),
+    mood_id: Optional[str] = Form(None),
+    scene: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+):
+    """
+    mode = 'enhance' | 'match' | 'mood'
+      - 'enhance': needs file (image)
+      - 'match':   needs file (reference image)
+      - 'mood':    needs mood_id (optionally file for scene context or scene text)
+    """
+    mode = (mode or "").lower().strip()
+    try:
+        if mode == "enhance":
+            if file is None:
+                raise HTTPException(status_code=400, detail="Image file is required for enhance mode")
+            data = await file.read()
+            if not data or len(data) > 15 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="Image missing or too large (max 15 MB)")
+            grade = await ai_assist.enhance(data)
+        elif mode == "match":
+            if file is None:
+                raise HTTPException(status_code=400, detail="Reference image is required for match mode")
+            data = await file.read()
+            if not data or len(data) > 15 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="Image missing or too large (max 15 MB)")
+            grade = await ai_assist.match_reference(data)
+        elif mode == "mood":
+            if not mood_id:
+                raise HTTPException(status_code=400, detail="mood_id is required for mood mode")
+            grade = await ai_assist.mood_grade(mood_id, scene or "")
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown mode: {mode}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("AI assist failed")
+        raise HTTPException(status_code=502, detail=f"AI assist failed: {e}") from e
+
+    return {"grade": grade}
 
 
 # ---- Mount ------------------------------------------------------------------
