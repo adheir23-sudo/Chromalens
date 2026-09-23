@@ -175,6 +175,33 @@ ${dv.notes || ""}
 `;
   }, [dv]);
 
+  const cc = analysis?.capcut || {};
+  const capcutText = useMemo(() => {
+    const row = (k, v) => `${k.padEnd(13)}: ${v >= 0 && typeof v === "number" && k !== "Sharpen" && k !== "Fade" && k !== "Vignette" && k !== "Grain" ? (v > 0 ? "+" + v : v) : v}`;
+    return `# ChromaLens · CapCut Adjustments
+Brightness   : ${cc.brightness}
+Contrast     : ${cc.contrast}
+Saturation   : ${cc.saturation}
+Sharpen      : ${cc.sharpen}
+Highlights   : ${cc.highlights}
+Shadows      : ${cc.shadows}
+Whites       : ${cc.whites}
+Blacks       : ${cc.blacks}
+Temperature  : ${cc.temperature}
+Tint         : ${cc.tint}
+Hue          : ${cc.hue}
+Fade         : ${cc.fade}
+Vignette     : ${cc.vignette}
+Grain        : ${cc.grain}
+
+# Suggested Filter
+${cc.filter_suggestion || ""}
+
+# Workflow
+${cc.notes || ""}
+`;
+  }, [cc]);
+
   const copy = async (text, label) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -227,6 +254,9 @@ ${dv.notes || ""}
           </TabsTrigger>
           <TabsTrigger value="davinci" data-testid="tab-davinci">
             DaVinci Resolve
+          </TabsTrigger>
+          <TabsTrigger value="capcut" data-testid="tab-capcut">
+            CapCut
           </TabsTrigger>
         </TabsList>
 
@@ -288,6 +318,49 @@ ${dv.notes || ""}
             data-testid="copy-davinci-btn"
           >
             <Copy size={14} className="mr-2" /> Copy DaVinci Recipe
+          </Button>
+        </TabsContent>
+
+        <TabsContent value="capcut" className="mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+            <SliderRow label="Brightness" value={cc.brightness ?? 0} min={-100} max={100} />
+            <SliderRow label="Contrast" value={cc.contrast ?? 0} min={-100} max={100} />
+            <SliderRow label="Saturation" value={cc.saturation ?? 0} min={-100} max={100} />
+            <SliderRow label="Sharpen" value={cc.sharpen ?? 0} min={0} max={100} />
+            <SliderRow label="Highlights" value={cc.highlights ?? 0} min={-100} max={100} />
+            <SliderRow label="Shadows" value={cc.shadows ?? 0} min={-100} max={100} />
+            <SliderRow label="Whites" value={cc.whites ?? 0} min={-100} max={100} />
+            <SliderRow label="Blacks" value={cc.blacks ?? 0} min={-100} max={100} />
+            <SliderRow label="Temperature" value={cc.temperature ?? 0} min={-100} max={100} />
+            <SliderRow label="Tint" value={cc.tint ?? 0} min={-100} max={100} />
+            <SliderRow label="Hue" value={cc.hue ?? 0} min={-100} max={100} />
+            <SliderRow label="Fade" value={cc.fade ?? 0} min={0} max={100} />
+            <SliderRow label="Vignette" value={cc.vignette ?? 0} min={0} max={100} />
+            <SliderRow label="Grain" value={cc.grain ?? 0} min={0} max={100} />
+          </div>
+
+          {cc.filter_suggestion && (
+            <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-amber-500/10 to-cyan-500/5 border border-amber-500/20">
+              <div className="cl-label mb-2">Suggested CapCut Filter</div>
+              <p className="text-sm text-slate-100 font-mono-tech" data-testid="capcut-filter">
+                {cc.filter_suggestion}
+              </p>
+            </div>
+          )}
+
+          {cc.notes && (
+            <div className="mt-3 p-4 rounded-lg bg-black/30 border border-white/5">
+              <div className="cl-label mb-2">Workflow</div>
+              <p className="text-sm text-slate-300 leading-relaxed font-mono-tech">{cc.notes}</p>
+            </div>
+          )}
+
+          <Button
+            onClick={() => copy(capcutText, "CapCut recipe")}
+            className="mt-6 cl-btn-primary h-10 px-5 rounded-lg"
+            data-testid="copy-capcut-btn"
+          >
+            <Copy size={14} className="mr-2" /> Copy CapCut Recipe
           </Button>
         </TabsContent>
       </Tabs>

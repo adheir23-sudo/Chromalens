@@ -87,6 +87,24 @@ JSON SCHEMA:
     "contrast": 1.0,
     "pivot": 0.435,
     "notes": "one-line colorist notes about node order (e.g. 'Serial: Balance -> Print Film Emulation -> Halation -> Grain 8mm')"
+  },
+  "capcut": {
+    "brightness": 0,
+    "contrast": 0,
+    "saturation": 0,
+    "sharpen": 0,
+    "highlights": 0,
+    "shadows": 0,
+    "whites": 0,
+    "blacks": 0,
+    "temperature": 0,
+    "tint": 0,
+    "hue": 0,
+    "fade": 0,
+    "vignette": 0,
+    "grain": 0,
+    "filter_suggestion": "Suggested CapCut built-in filter that gets closest, e.g. 'Movie / Bronze' or 'Aesthetic / Vintage Film' at 60% strength",
+    "notes": "one-line workflow tip, e.g. 'Apply Adjust -> Filter (Movie/Bronze @ 60) -> Effects (Light Leak) for authentic film look'"
   }
 }
 
@@ -95,6 +113,7 @@ Ranges:
 - Lightroom HSL Hue/Saturation/Luminance: -100 to +100 for each per color.
 - DaVinci Resolve lift/gamma/gain/offset per RGBY channel: -1.0 to +1.0.
 - DaVinci Resolve saturation & contrast around 1.0 (0.0 - 2.0 typical).
+- CapCut Brightness/Contrast/Saturation/Highlights/Shadows/Whites/Blacks/Temperature/Tint/Hue: -100 to +100. Sharpen/Fade/Vignette/Grain: 0 to +100.
 
 Return ONLY the JSON object.
 """
