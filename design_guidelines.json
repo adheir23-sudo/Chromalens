@@ -1,0 +1,132 @@
+{
+  "app_name": "ChromaLens AI",
+  "archetype": "THE PERFORMANCE PRO / DARKROOM CONTROL SURFACE",
+  "design_concept": "A precision darkroom workstation and optical laboratory interface for cinema & photography professionals. Blends high-density metadata displays with dark obsidian surfaces, tactile glowing sliders, and color wheel inspector panels.",
+  "theme": "dark",
+  "typography": {
+    "heading_font": "Outfit, sans-serif",
+    "body_font": "Inter, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_pairings": "Outfit (Display & Headings) + Inter (Interface & Body) + JetBrains Mono (Technical EXIF, Color Grades & Coordinates)",
+    "rules": {
+      "h1": "text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-100",
+      "h2": "text-2xl sm:text-3xl font-semibold tracking-tight text-slate-200",
+      "h3": "text-lg sm:text-xl font-medium text-slate-200",
+      "label": "text-xs font-mono uppercase tracking-wider text-amber-400/90",
+      "data_value": "font-mono text-sm text-cyan-300 font-medium"
+    }
+  },
+  "colors": {
+    "background": "#0A0C10",
+    "surface": "#12151E",
+    "surface_elevated": "#1A1E2C",
+    "surface_border": "rgba(255, 255, 255, 0.08)",
+    "primary": "#F59E0B",
+    "primary_hover": "#D97706",
+    "accent_cyan": "#06B6D4",
+    "accent_emerald": "#10B981",
+    "accent_violet": "#8B5CF6",
+    "text_main": "#F3F4F6",
+    "text_muted": "#9CA3AF",
+    "text_dim": "#6B7280",
+    "gradient_hero": "from-amber-500/10 via-slate-900/50 to-cyan-500/10",
+    "gradient_accent": "from-amber-400 to-amber-600",
+    "status_success": "#10B981",
+    "status_info": "#3B82F6",
+    "status_warning": "#F59E0B"
+  },
+  "layout_and_spacing": {
+    "container_padding": "px-4 sm:px-8 lg:px-12 py-8",
+    "grid_gap": "gap-6 lg:gap-8",
+    "bento_grid_mode": "MODE B - High Density Studio Grid for analytical data & side-by-side split visual inspection",
+    "card_style": "bg-[#12151E] border border-white/10 rounded-xl p-5 shadow-2xl backdrop-blur-md"
+  },
+  "components_and_features": {
+    "header_nav": "Glassmorphism header (bg-[#0A0C10]/80 backdrop-blur-xl border-b border-white/10 z-50 fixed top-0 w-full). Includes logo with aperture icon, main navigation tabs (Analyzer, Public Gallery, Preset Library, Camera Specs Database), media upload quick button, and darkroom preset mode indicator.",
+    "upload_zone": "Interactive drag-and-drop dropzone supporting JPG, PNG, WEBP, RAW, MP4, MOV files. Shows live upload preview with progress bar, EXIF quick scan preview, and sample demo files button for instant analysis.",
+    "analysis_dashboard": "Split-view control center with original media preview (with zoom/loupe tool & color picker), technical metadata card grid (Device, Lens, Resolution, Bit Depth, FPS, Megapixels, Software), and Color Grading Formula tabbed panel.",
+    "color_grading_formula_panel": {
+      "basic_tone": "Interactive sliders for Temperature (K), Tint, Exposure (EV), Contrast, Highlights, Shadows, Whites, Blacks",
+      "hsl_matrix": "8-color matrix (Red, Orange, Yellow, Green, Aqua, Blue, Purple, Magenta) with Hue, Saturation, Luminance bars",
+      "color_wheels": "3-Way Color Wheels for Shadows (Lift), Midtones (Gamma), Highlights (Gain) with vector point targets",
+      "mood_description": "Natural language summary of atmospheric tone, contrast curve, and lighting style",
+      "preset_export": "Copy preset buttons for Lightroom (.xmp / slider values), DaVinci Resolve node tree, and CUBE 3D LUT snippet"
+    },
+    "public_gallery": "Filterable mosaic grid of community analyzed photos/videos. Filterable by Camera Brand (Sony, Canon, FUJIFILM, RED, ARRI, iPhone), Editing Software (DaVinci Resolve, Lightroom, Capture One, Premiere Pro), Mood Tone, and Resolution.",
+    "analysis_detail_modal": "Full-screen or side-by-side modal displaying high-res visual comparison, dominant color palette swatches with hex codes, EXIF telemetry block, and copyable color grading recipe."
+  },
+  "media_assets": {
+    "darkroom_gear": [
+      {
+        "url": "https://images.unsplash.com/photo-1777019051200-b8281581c426?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxjaW5lbWF0aWMlMjBwaG90b2dyYXBoeSUyMGNvbG9yJTIwZ3JhZGluZyUyMGRhcmtyb29tJTIwcGhvdG9ncmFwaGVyJTIwZ2VhcnxlbnwwfHx8fDE3OTAxNzAzNDZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Camera equipment, lenses and light table with film strips",
+        "category": "hero_background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1777019096423-c3a144845b3f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxjaW5lbWF0aWMlMjBwaG90b2dyYXBoeSUyMGNvbG9yJTIwZ3JhZGluZyUyMGRhcmtyb29tJTIwcGhvdG9ncmFwaGVyJTIwZ2VhcnxlbnwwfHx8fDE3OTAxNzAzNDZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Camera lenses, film negatives, and editing setup",
+        "category": "feature_card"
+      }
+    ],
+    "sample_gallery_shots": [
+      {
+        "url": "https://images.unsplash.com/photo-1718073398740-9d3484bd6340?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxjaW5lbWF0aWMlMjBwb3J0cmFpdCUyMG1vb2QlMjBsYW5kc2NhcGUlMjBjb2xvciUyMGdyYWRpbmclMjBwaG90b3xlbnwwfHx8fDE3OTAxNzAzNTN8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Cinematic mountain valley twilight landscape",
+        "title": "Nordic Twilight Valley",
+        "camera": "Sony A7 IV + FE 24-70mm f/2.8 GM",
+        "software": "DaVinci Resolve 19",
+        "bit_depth": "10-bit 4:2:2",
+        "resolution": "3840 x 2160 (4K)",
+        "megapixels": "33.0 MP",
+        "mood": "Moody & Cool Teal"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1697981627073-e7ac1b4e900c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHw0fHxjaW5lbWF0aWMlMjBwb3J0cmFpdCUyMG1vb2QlMjBsYW5kc2NhcGUlMjBjb2xvciUyMGdyYWRpbmclMjBwaG90b3xlbnwwfHx8fDE3OTAxNzAzNTN8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Golden hour portrait in field with warm glow",
+        "title": "Warm Golden Hour Portrait",
+        "camera": "FUJIFILM X-T5 + XF 56mm f/1.2 R WR",
+        "software": "Adobe Lightroom Classic",
+        "bit_depth": "14-bit RAW",
+        "resolution": "7728 x 5152",
+        "megapixels": "40.2 MP",
+        "mood": "Warm Vintage Film Emulation"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1770258723510-72a5e54ba7a1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwyfHxjaW5lbWF0aWMlMjBwb3J0cmFpdCUyMG1vb2QlMjBsYW5kc2NhcGUlMjBjb2xvciUyMGdyYWRpbmclMjBwaG90b3xlbnwwfHx8fDE3OTAxNzAzNTN8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Foggy alpine forest cinematic street portrait",
+        "title": "Misty Alpine Forest",
+        "camera": "Canon EOS R5 + RF 50mm f/1.2 L",
+        "software": "Capture One 23",
+        "bit_depth": "12-bit Log",
+        "resolution": "8192 x 5464 (8K)",
+        "megapixels": "45.0 MP",
+        "mood": "Desaturated Atmospheric Fog"
+      },
+      {
+        "url": "https://images.pexels.com/photos/5504143/pexels-photo-5504143.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Twilight lake view with reflection and mountain backdrop",
+        "title": "Blue Hour Dock Reflection",
+        "camera": "RED V-Raptor 8K VV",
+        "software": "DaVinci Resolve Studio",
+        "bit_depth": "16-bit REDCODE RAW",
+        "resolution": "8192 x 4320",
+        "megapixels": "35.4 MP",
+        "mood": "Cinematic Cyan & Deep Navy"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build a complete full-stack hybrid web application for ChromaLens AI in React JS and FastAPI.",
+    "Ensure all key functionalities are fully working: media file drag-and-drop upload/analysis simulator (extracting EXIF camera metadata, resolution, bit depth, megapixels, software, and generating realistic Lightroom/DaVinci grading values), detailed formula inspector with copyable parameters and CUBE LUT snippet, and interactive public gallery with search & filters.",
+    "Apply data-testid attributes to all interactive elements, buttons, inputs, tabs, gallery items, and sliders (e.g. data-testid='upload-dropzone', data-testid='copy-preset-button', data-testid='gallery-filter-camera', etc.).",
+    "Use Lucide icons (lucide-react) for technical HUD indicators, sliders, camera icons, copy buttons, and export actions.",
+    "Use sonner for instant toast feedback when copying color grading formulas or presets to clipboard.",
+    "Maintain the dark darkroom theme aesthetics (#0A0C10) with sharp typography contrast, glowing slider tracks, and color swatch indicators."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "anti_slop": "Do not make a generic SaaS blue dashboard. Ensure this looks like a professional colorist darkroom application with rich matte dark backgrounds, titanium text, and glowing amber/cyan data readouts.",
+    "contrast": "All text must meet high APCA/WCAG contrast against dark darkroom surfaces. Use explicitly text-slate-100, text-slate-300, or text-amber-400.",
+    "no_transparent_header": "Header must use backdrop-blur-xl with semi-opaque dark background (bg-[#0A0C10]/85).",
+    "test_ids": "Add data-testid to every interactive button, tab, card, and form element."
+  }
+}
