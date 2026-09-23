@@ -65,6 +65,11 @@ def _params(analysis: dict) -> dict:
         "hsl": hsl,
         "vignette": f(fx, "vignette"),  # -100 (dark corners) .. 100 (bright)
         "grain": f(fx, "grain"),  # 0 .. 100
+        "split_shadow_hue": f(lr.get("split_toning") or {}, "shadow_hue", 220.0),
+        "split_shadow_saturation": f(lr.get("split_toning") or {}, "shadow_saturation"),
+        "split_highlight_hue": f(lr.get("split_toning") or {}, "highlight_hue", 40.0),
+        "split_highlight_saturation": f(lr.get("split_toning") or {}, "highlight_saturation"),
+        "split_balance": f(lr.get("split_toning") or {}, "balance"),
     }
 
 
@@ -179,6 +184,25 @@ def apply_grade(r: np.ndarray, g: np.ndarray, b: np.ndarray, p: dict,
         r = luma + (r - luma) * (1.0 + vib * weight)
         g = luma + (g - luma) * (1.0 + vib * weight)
         b = luma + (b - luma) * (1.0 + vib * weight)
+
+    # 5.5) Split toning (shadow tint + highlight tint)
+    hi_sat = float(p.get("split_highlight_saturation", 0.0)) / 100.0
+    sh_sat = float(p.get("split_shadow_saturation", 0.0)) / 100.0
+    if hi_sat > 0.0 or sh_sat > 0.0:
+        balance = float(np.clip(p.get("split_balance", 0.0), -100.0, 100.0)) / 100.0
+        threshold = 0.5 - balance * 0.25
+        luma2 = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        hi_w = np.clip((luma2 - threshold) / max(0.15, 1.0 - threshold), 0.0, 1.0)
+        sh_w = np.clip((threshold - luma2) / max(0.15, threshold), 0.0, 1.0)
+        hi_r, hi_g, hi_b = _hsl_to_rgb(np.array([float(p.get("split_highlight_hue", 40.0)) % 360.0]),
+                                       np.array([1.0]), np.array([0.5]))
+        sh_r, sh_g, sh_b = _hsl_to_rgb(np.array([float(p.get("split_shadow_hue", 220.0)) % 360.0]),
+                                       np.array([1.0]), np.array([0.5]))
+        hi_r, hi_g, hi_b = float(hi_r[0]), float(hi_g[0]), float(hi_b[0])
+        sh_r, sh_g, sh_b = float(sh_r[0]), float(sh_g[0]), float(sh_b[0])
+        r = r + hi_w * hi_sat * (hi_r - luma2) + sh_w * sh_sat * (sh_r - luma2)
+        g = g + hi_w * hi_sat * (hi_g - luma2) + sh_w * sh_sat * (sh_g - luma2)
+        b = b + hi_w * hi_sat * (hi_b - luma2) + sh_w * sh_sat * (sh_b - luma2)
 
     # 6) HSL per-band adjustments
     hsl_params = p.get("hsl") or {}

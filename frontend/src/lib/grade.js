@@ -37,6 +37,13 @@ export const NEUTRAL_PARAMS = () => ({
   hsl: Object.fromEntries(
     HSL_BANDS.map(([k]) => [k, { hue: 0, saturation: 0, luminance: 0 }])
   ),
+  split_toning: {
+    shadow_hue: 220,
+    shadow_saturation: 0,
+    highlight_hue: 40,
+    highlight_saturation: 0,
+    balance: 0,
+  },
   vignette: 0,
   grain: 0,
 });
@@ -64,6 +71,14 @@ export function paramsFromAnalysis(analysis) {
   }
   if (typeof fx.vignette === "number") p.vignette = fx.vignette;
   if (typeof fx.grain === "number") p.grain = fx.grain;
+  const st = lr.split_toning || {};
+  p.split_toning = {
+    shadow_hue: Number(st.shadow_hue ?? 220),
+    shadow_saturation: Number(st.shadow_saturation ?? 0),
+    highlight_hue: Number(st.highlight_hue ?? 40),
+    highlight_saturation: Number(st.highlight_saturation ?? 0),
+    balance: Number(st.balance ?? 0),
+  };
   return p;
 }
 
@@ -139,6 +154,14 @@ export function applyGradeToImageData(imageData, p) {
   const grainAmt = Math.max(0, Math.min(100, p.grain || 0)) / 100 * 0.10;
   const rand = grainAmt > 0 ? mulberry32(42) : null;
 
+  // Precompute split-toning tint vectors
+  const st = p.split_toning || {};
+  const stHiSat = Math.max(0, Math.min(100, st.highlight_saturation || 0)) / 100;
+  const stShSat = Math.max(0, Math.min(100, st.shadow_saturation || 0)) / 100;
+  const stBalance = Math.max(-100, Math.min(100, st.balance || 0)) / 100;
+  const [stHiR, stHiG, stHiB] = hslToRgb(((st.highlight_hue || 40) % 360 + 360) % 360, 1, 0.5);
+  const [stShR, stShG, stShB] = hslToRgb(((st.shadow_hue || 220) % 360 + 360) % 360, 1, 0.5);
+
   const cy = H / 2, cx = W / 2;
   const maxD = Math.sqrt(cy * cy + cx * cx);
 
@@ -178,6 +201,16 @@ export function applyGradeToImageData(imageData, p) {
       r = luma + (r - luma) * (1 + vib * w);
       g = luma + (g - luma) * (1 + vib * w);
       b = luma + (b - luma) * (1 + vib * w);
+    }
+    // split toning
+    if (stHiSat > 0 || stShSat > 0) {
+      const luma2 = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const threshold = 0.5 - stBalance * 0.25;
+      const hiW = Math.max(0, Math.min(1, (luma2 - threshold) / Math.max(0.15, 1 - threshold)));
+      const shW = Math.max(0, Math.min(1, (threshold - luma2) / Math.max(0.15, threshold)));
+      r = r + hiW * stHiSat * (stHiR - luma2) + shW * stShSat * (stShR - luma2);
+      g = g + hiW * stHiSat * (stHiG - luma2) + shW * stShSat * (stShG - luma2);
+      b = b + hiW * stHiSat * (stHiB - luma2) + shW * stShSat * (stShB - luma2);
     }
     // HSL
     if (hslOn) {

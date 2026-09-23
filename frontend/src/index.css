@@ -150,6 +150,27 @@ body::before {
     background: linear-gradient(90deg, #06B6D4, #F59E0B);
 }
 
+/* Hue picker range thumb */
+.hue-picker::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 28px;
+    border-radius: 4px;
+    background: #ffffff;
+    border: 2px solid #0A0C10;
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    cursor: pointer;
+}
+.hue-picker::-moz-range-thumb {
+    width: 18px;
+    height: 28px;
+    border-radius: 4px;
+    background: #ffffff;
+    border: 2px solid #0A0C10;
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    cursor: pointer;
+}
+
 /* Selection */
 ::selection { background: #F59E0B; color: #0A0C10; }
 

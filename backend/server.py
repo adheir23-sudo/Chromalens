@@ -261,6 +261,8 @@ def _params_to_analysis(params: dict) -> dict:
     lightroom = {k: params[k] for k in lr_keys if k in params}
     if "hsl" in params:
         lightroom["hsl"] = params["hsl"]
+    if "split_toning" in params:
+        lightroom["split_toning"] = params["split_toning"]
     effects = {}
     if "vignette" in params:
         effects["vignette"] = params["vignette"]

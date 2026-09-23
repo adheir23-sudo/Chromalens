@@ -11,6 +11,7 @@ import { NEUTRAL_PARAMS, paramsFromAnalysis, HSL_BANDS } from "../lib/grade";
 import { loadPresets, savePreset, deletePreset } from "../lib/presets";
 import EditorCanvas from "../components/EditorCanvas";
 import { ParamSlider, TempSlider } from "../components/EditorSliders";
+import HuePicker from "../components/HuePicker";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
@@ -145,6 +146,14 @@ export default function EditorPage() {
       ...p,
       hsl: { ...p.hsl, [band]: { ...p.hsl[band], [axis]: val } },
     }));
+  const setSplit = (patch) =>
+    setParams((p) => ({ ...p, split_toning: { ...p.split_toning, ...patch } }));
+  const applyTealOrange = () =>
+    setSplit({ shadow_hue: 200, shadow_saturation: 45, highlight_hue: 35, highlight_saturation: 40, balance: 0 });
+  const applyPurpleGreen = () =>
+    setSplit({ shadow_hue: 270, shadow_saturation: 35, highlight_hue: 90, highlight_saturation: 30, balance: 0 });
+  const applyMagentaCyan = () =>
+    setSplit({ shadow_hue: 300, shadow_saturation: 40, highlight_hue: 180, highlight_saturation: 35, balance: 0 });
 
   // Apply a saved preset
   const applyPreset = (preset) => {
@@ -323,10 +332,11 @@ export default function EditorPage() {
         <div className="lg:col-span-4 space-y-4">
           <div className="cl-card p-4">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="bg-black/40 border border-white/10 w-full grid grid-cols-4">
+              <TabsList className="bg-black/40 border border-white/10 w-full grid grid-cols-5">
                 <TabsTrigger value="basic" data-testid="tab-basic">Basic</TabsTrigger>
                 <TabsTrigger value="tone" data-testid="tab-tone">Tone</TabsTrigger>
                 <TabsTrigger value="hsl" data-testid="tab-hsl">HSL</TabsTrigger>
+                <TabsTrigger value="split" data-testid="tab-split">Split</TabsTrigger>
                 <TabsTrigger value="fx" data-testid="tab-fx">FX</TabsTrigger>
               </TabsList>
 
@@ -348,6 +358,109 @@ export default function EditorPage() {
 
               <TabsContent value="hsl" className="mt-4">
                 <HslMatrix hsl={params.hsl} onChange={setHsl} />
+              </TabsContent>
+
+              <TabsContent value="split" className="mt-4" data-testid="split-tab-content">
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  <button
+                    type="button"
+                    onClick={applyTealOrange}
+                    className="px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-colors font-mono-tech text-[10px] uppercase tracking-widest"
+                    data-testid="quick-teal-orange"
+                  >
+                    Teal &amp; Orange
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyPurpleGreen}
+                    className="px-2.5 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 transition-colors font-mono-tech text-[10px] uppercase tracking-widest"
+                    data-testid="quick-purple-green"
+                  >
+                    Purple &amp; Lime
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyMagentaCyan}
+                    className="px-2.5 py-1.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 transition-colors font-mono-tech text-[10px] uppercase tracking-widest"
+                    data-testid="quick-magenta-cyan"
+                  >
+                    Magenta &amp; Cyan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSplit({ shadow_saturation: 0, highlight_saturation: 0, balance: 0 })}
+                    className="ml-auto px-2.5 py-1.5 rounded-md bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition-colors font-mono-tech text-[10px] uppercase tracking-widest"
+                    data-testid="split-clear"
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                {/* Highlights */}
+                <div className="pb-4 mb-4 border-b border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className="w-3 h-3 rounded-full ring-1 ring-white/10"
+                      style={{ background: `hsl(${params.split_toning.highlight_hue} 90% 55%)` }}
+                    />
+                    <div className="cl-label">Highlights</div>
+                  </div>
+                  <HuePicker
+                    value={params.split_toning.highlight_hue}
+                    onChange={(v) => setSplit({ highlight_hue: v })}
+                    testId="split-highlight-hue"
+                  />
+                  <div className="mt-2">
+                    <ParamSlider
+                      label="Amount"
+                      value={params.split_toning.highlight_saturation}
+                      min={0}
+                      max={100}
+                      onChange={(v) => setSplit({ highlight_saturation: v })}
+                      testId="split-highlight-sat"
+                    />
+                  </div>
+                </div>
+
+                {/* Shadows */}
+                <div className="pb-4 mb-4 border-b border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className="w-3 h-3 rounded-full ring-1 ring-white/10"
+                      style={{ background: `hsl(${params.split_toning.shadow_hue} 90% 45%)` }}
+                    />
+                    <div className="cl-label">Shadows</div>
+                  </div>
+                  <HuePicker
+                    value={params.split_toning.shadow_hue}
+                    onChange={(v) => setSplit({ shadow_hue: v })}
+                    testId="split-shadow-hue"
+                  />
+                  <div className="mt-2">
+                    <ParamSlider
+                      label="Amount"
+                      value={params.split_toning.shadow_saturation}
+                      min={0}
+                      max={100}
+                      onChange={(v) => setSplit({ shadow_saturation: v })}
+                      testId="split-shadow-sat"
+                    />
+                  </div>
+                </div>
+
+                {/* Balance */}
+                <ParamSlider
+                  label="Balance"
+                  value={params.split_toning.balance}
+                  min={-100}
+                  max={100}
+                  onChange={(v) => setSplit({ balance: v })}
+                  testId="split-balance"
+                />
+                <p className="mt-2 text-[10px] font-mono-tech text-slate-500 leading-relaxed">
+                  Balance shifts the midpoint between shadow and highlight zones —
+                  positive pushes more tones toward the shadow tint.
+                </p>
               </TabsContent>
 
               <TabsContent value="fx" className="mt-4 space-y-1">
