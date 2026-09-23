@@ -6,6 +6,7 @@ import AnalyzerPage from "@/pages/AnalyzerPage";
 import GalleryPage from "@/pages/GalleryPage";
 import AnalysisDetailPage from "@/pages/AnalysisDetailPage";
 import AboutPage from "@/pages/AboutPage";
+import EditorPage from "@/pages/EditorPage";
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
           <Route path="/" element={<AnalyzerPage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/analysis/:id" element={<AnalysisDetailPage />} />
+          <Route path="/edit" element={<EditorPage />} />
+          <Route path="/edit/from/:id" element={<EditorPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
         <Toaster

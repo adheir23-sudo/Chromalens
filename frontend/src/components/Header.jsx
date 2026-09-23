@@ -41,6 +41,9 @@ export default function Header() {
           <NavLink to="/" end className={linkCls} data-testid="nav-analyzer">
             Analyzer
           </NavLink>
+          <NavLink to="/edit" className={linkCls} data-testid="nav-editor">
+            Editor
+          </NavLink>
           <NavLink to="/gallery" className={linkCls} data-testid="nav-gallery">
             Gallery
           </NavLink>

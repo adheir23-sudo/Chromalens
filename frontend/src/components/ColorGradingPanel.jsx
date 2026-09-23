@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { Button } from "./ui/button";
 import { API } from "../lib/api";
@@ -230,16 +231,26 @@ ${cc.notes || ""}
         </div>
         <div className="flex flex-col items-end gap-3">
           {analysisId && (
-            <a
-              href={`${API}/luts/${analysisId}.cube`}
-              download
-              onClick={() => toast.success(".cube LUT download started")}
-              data-testid="download-lut-btn"
-              className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-white/5 hover:bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 text-amber-300 hover:text-amber-200 transition-colors text-sm font-medium"
-            >
-              <Download size={14} />
-              Download .cube LUT
-            </a>
+            <div className="flex gap-2 flex-wrap justify-end">
+              <Link
+                to={`/edit/from/${analysisId}`}
+                data-testid="open-in-editor-btn"
+                className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#0A0C10] transition-colors text-sm font-semibold shadow-[0_6px_24px_-8px_rgba(245,158,11,0.6)]"
+              >
+                <Wand2 size={14} />
+                Open in Editor
+              </Link>
+              <a
+                href={`${API}/luts/${analysisId}.cube`}
+                download
+                onClick={() => toast.success(".cube LUT download started")}
+                data-testid="download-lut-btn"
+                className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-white/5 hover:bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 text-amber-300 hover:text-amber-200 transition-colors text-sm font-medium"
+              >
+                <Download size={14} />
+                .cube LUT
+              </a>
+            </div>
           )}
           {palette.length > 0 && (
             <div className="flex gap-1.5" data-testid="palette-swatches">

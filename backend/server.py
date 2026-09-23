@@ -1,12 +1,16 @@
 """ChromaLens AI - FastAPI backend."""
 import os
 import uuid
+import json
+import shutil
+import subprocess
+import tempfile
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Query, Response
+from fastapi import FastAPI, APIRouter, UploadFile, File, Form, HTTPException, Query, Response
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
@@ -17,7 +21,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from storage import init_storage, put_object, get_object  # noqa: E402
 from analyzer import analyze_media  # noqa: E402
-from lut import build_cube_lut, render_graded_preview  # noqa: E402
+from lut import build_cube_lut, render_graded_preview, render_graded_image  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -245,6 +249,118 @@ async def preview_endpoint(analysis_id: str):
         media_type="image/jpeg",
         headers={"Cache-Control": "public, max-age=86400"},
     )
+
+
+# ---- Editor: photo export ---------------------------------------------------
+def _params_to_analysis(params: dict) -> dict:
+    """Wrap frontend editor params in the shape expected by lut.py."""
+    lr_keys = {
+        "temperature", "tint", "exposure", "contrast", "highlights", "shadows",
+        "whites", "blacks", "saturation", "vibrance",
+    }
+    lightroom = {k: params[k] for k in lr_keys if k in params}
+    if "hsl" in params:
+        lightroom["hsl"] = params["hsl"]
+    effects = {}
+    if "vignette" in params:
+        effects["vignette"] = params["vignette"]
+    if "grain" in params:
+        effects["grain"] = params["grain"]
+    return {"lightroom": lightroom, "effects": effects}
+
+
+@api_router.post("/edit/photo")
+async def edit_photo(
+    file: UploadFile = File(...),
+    params: str = Form(...),
+    max_side: int = Form(2400),
+):
+    try:
+        params_dict = json.loads(params)
+    except Exception:
+        raise HTTPException(status_code=400, detail="params must be valid JSON")
+    ct = (file.content_type or "").lower()
+    ext = (file.filename or "").lower().rsplit(".", 1)[-1]
+    if ct not in {"image/jpeg", "image/png", "image/webp"} and ext not in {"jpg", "jpeg", "png", "webp"}:
+        raise HTTPException(status_code=400, detail="Only JPEG/PNG/WEBP images are supported")
+    data = await file.read()
+    if len(data) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image too large (max 25 MB)")
+    try:
+        out = render_graded_image(data, _params_to_analysis(params_dict), max_side=max_side, jpeg_quality=92)
+    except Exception as e:
+        logger.exception("Photo edit failed")
+        raise HTTPException(status_code=500, detail=f"Photo edit failed: {e}") from e
+    stem = (file.filename or "edit").rsplit(".", 1)[0] or "edit"
+    return Response(
+        content=out,
+        media_type="image/jpeg",
+        headers={"Content-Disposition": f'attachment; filename="{stem}_chromalens.jpg"'},
+    )
+
+
+# ---- Editor: video export (ffmpeg + .cube LUT) ------------------------------
+@api_router.post("/edit/video")
+async def edit_video(
+    file: UploadFile = File(...),
+    params: str = Form(...),
+):
+    if shutil.which("ffmpeg") is None:
+        raise HTTPException(status_code=503, detail="ffmpeg is not installed on the server")
+    try:
+        params_dict = json.loads(params)
+    except Exception:
+        raise HTTPException(status_code=400, detail="params must be valid JSON")
+
+    ct = (file.content_type or "").lower()
+    ext = (file.filename or "").lower().rsplit(".", 1)[-1]
+    if ct not in {"video/mp4", "video/quicktime", "video/mov"} and ext not in {"mp4", "mov"}:
+        raise HTTPException(status_code=400, detail="Only MP4 or MOV videos are supported")
+
+    data = await file.read()
+    if len(data) > 80 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Video too large (max 80 MB)")
+
+    tmp_dir = tempfile.mkdtemp(prefix="chromalens_vid_")
+    try:
+        in_path = os.path.join(tmp_dir, f"in.{ext or 'mp4'}")
+        out_path = os.path.join(tmp_dir, "out.mp4")
+        lut_path = os.path.join(tmp_dir, "grade.cube")
+
+        with open(in_path, "wb") as fh:
+            fh.write(data)
+
+        cube_text, _ = build_cube_lut(_params_to_analysis(params_dict), size=33)
+        with open(lut_path, "w") as fh:
+            fh.write(cube_text)
+
+        # Escape colons in lut3d filter path (ffmpeg quirk)
+        lut_esc = lut_path.replace(":", "\\:")
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", in_path,
+            "-vf", f"lut3d={lut_esc}",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+            "-c:a", "copy",
+            "-movflags", "+faststart",
+            out_path,
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        if proc.returncode != 0:
+            logger.error("ffmpeg failed: %s", proc.stderr[-800:])
+            raise HTTPException(status_code=500, detail="Video processing failed")
+
+        with open(out_path, "rb") as fh:
+            out_bytes = fh.read()
+
+        stem = (file.filename or "edit").rsplit(".", 1)[0] or "edit"
+        return Response(
+            content=out_bytes,
+            media_type="video/mp4",
+            headers={"Content-Disposition": f'attachment; filename="{stem}_chromalens.mp4"'},
+        )
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 # ---- Mount ------------------------------------------------------------------
